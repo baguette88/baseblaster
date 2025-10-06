@@ -64,9 +64,26 @@ export function createGame(): GameApi {
   const bulletMat = new THREE.MeshStandardMaterial({ color: COLORS.neonPink, emissive: 0xaa2299, metalness: 0.6, roughness: 0.2 })
   const enemyMat = makeEnemyMaterial()
 
-  const body = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.2, 12), playerMat)
-  body.rotation.x = Math.PI * 0.5
-  const player = new THREE.Group(); player.add(body); scene.add(player)
+  function buildPlayer() {
+    const g = new THREE.Group()
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.2, 12), playerMat)
+    body.rotation.x = Math.PI * 0.5
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.05, 8, 24), new THREE.MeshStandardMaterial({ color: COLORS.neonPink, emissive: 0xaa2299 }))
+    ring.rotation.x = Math.PI * 0.5
+    ring.position.z = 0.25
+    const finL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.02), playerMat)
+    const finR = finL.clone()
+    finL.position.set(-0.22, 0, 0)
+    finR.position.set(0.22, 0, 0)
+    g.add(body, ring, finL, finR)
+    return { group: g, ring }
+  }
+
+  const { group: player, ring: engineRing } = buildPlayer(); scene.add(player)
+
+  const trailGeom = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 20 }, () => new THREE.Vector3()))
+  const trail = new THREE.Line(trailGeom, new THREE.LineBasicMaterial({ color: COLORS.neonCyan, transparent: true, opacity: 0.6 }))
+  scene.add(trail)
 
   const input = { left: false, right: false, shoot: false }
   addEventListener('keydown', (e) => { if (e.code === 'ArrowLeft' || e.code === 'KeyA') input.left = true; if (e.code === 'ArrowRight' || e.code === 'KeyD') input.right = true; if (e.code === 'Space') input.shoot = true })
@@ -81,6 +98,8 @@ export function createGame(): GameApi {
   const powerEl = document.getElementById('power')!
   let score = 0, lives = 3
   let powerUntil = 0
+  let iFramesUntil = 0
+  let ending = false, endT = 0
 
   function shootNow() {
     const add = (offset: number, angle: number) => {
@@ -129,8 +148,14 @@ export function createGame(): GameApi {
     enemyT -= dt; if (enemyT <= 0) { spawnEnemy(GAME.enemyZStartMin - Math.random() * GAME.enemyZStartRnd); enemyT = GAME.enemySpawnFrames }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i]; e.m.position.addScaledVector(e.v, dt); e.m.rotation.y += 0.02 * dt
-      if (e.m.position.z > 8) { scene.remove(e.m); enemies.splice(i, 1); if (--lives <= 0) endRun(); livesEl.textContent = String(lives) }
+      if (e.m.position.z > 8) { scene.remove(e.m); enemies.splice(i, 1); onPlayerHit(); livesEl.textContent = String(lives) }
     }
+  }
+
+  function onPlayerHit() {
+    if (performance.now() < iFramesUntil || ending) return
+    lives -= 1; iFramesUntil = performance.now() + 1500
+    if (lives <= 0) beginEnd()
   }
 
   function updatePowerups(dt: number) {
@@ -161,11 +186,39 @@ export function createGame(): GameApi {
     }
   }
 
+  function updatePlayerFx(t: number, dt: number) {
+    const s = 1 + 0.1 * Math.sin(t * 0.015)
+    engineRing.scale.setScalar(s)
+    const pos = player.position.clone()
+    const arr = trailGeom.getAttribute('position') as THREE.BufferAttribute
+    for (let i = arr.count - 1; i > 0; i--) {
+      arr.setXYZ(i, arr.getX(i - 1), arr.getY(i - 1), arr.getZ(i - 1))
+    }
+    arr.setXYZ(0, pos.x, pos.y, pos.z)
+    arr.needsUpdate = true
+    const flash = performance.now() < iFramesUntil ? (Math.sin(t * 0.04) * 0.5 + 0.5) : 0
+    playerMat.emissiveIntensity = 0.8 + flash
+  }
+
+  function beginEnd() { ending = true; endT = 0; spawnBurst() }
+
+  function spawnBurst() {
+    const g = new THREE.InstancedMesh(new THREE.TetrahedronGeometry(0.12, 0), new THREE.MeshStandardMaterial({ color: COLORS.neonPink, emissive: 0xaa2299 }), 40)
+    for (let i = 0; i < 40; i++) {
+      const m = new THREE.Matrix4()
+      const p = new THREE.Vector3((Math.random() * 2 - 1) * 0.6, (Math.random() * 2 - 1) * 0.6, (Math.random() * 2 - 1) * 0.6)
+      m.setPosition(player.position.clone().add(p)); g.setMatrixAt(i, m)
+    }
+    scene.add(g); setTimeout(() => scene.remove(g), 1200)
+  }
+
   function frame(t: number) {
-    const dt = Math.min((t - last) / 16.6667, 2); last = t
+    let dt = Math.min((t - last) / 16.6667, 2); last = t
     if (!running) { requestAnimationFrame(frame); return }
     skyUniforms.uTime.value = t / 1000; (enemyMat.uniforms as any).uTime.value = t / 1000
-    movePlayer(dt); moveGrid(dt); handleShooting(dt); updateBullets(dt); updateEnemies(dt); updatePowerups(dt); handleCollisions()
+    if (ending) { endT += dt; dt *= 0.4 }
+    movePlayer(dt); moveGrid(dt); handleShooting(dt); updateBullets(dt); updateEnemies(dt); updatePowerups(dt); handleCollisions(); updatePlayerFx(t, dt)
+    if (ending && endT > 30) endRun()
     renderer.render(scene, camera); requestAnimationFrame(frame)
   }
 

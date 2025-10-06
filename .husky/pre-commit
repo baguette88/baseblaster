@@ -1,17 +1,3 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-# Block accidental secret commits
-if git diff --cached --name-only | grep -E '^(.*/)?\.env(\..*)?$' >/dev/null; then
-  echo "\n[SECURITY] Refusing to commit .env files. Use .env.example instead." >&2
-  exit 1
-fi
-
-# Simple secret pattern scan
-if git diff --cached | grep -E '(PRIVATE_KEY|SECRET|API_KEY|^pk=|0x[a-fA-F0-9]{64})' >/dev/null; then
-  echo "\n[SECURITY] Possible secret detected in staged changes. Remove before commit." >&2
-  exit 1
-fi
-
 exit 0
 

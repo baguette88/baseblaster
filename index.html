@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BaseBlaster</title>
+  <style>
+    html, body { margin:0; height:100%; background:#07060c; overflow:hidden; }
+    :root { --glass: rgba(18,12,26,.35); --b1:#7a2bf0; --b2:#2bf0ff; --text:#e6d9ff; }
+    .glass { backdrop-filter: blur(12px) saturate(140%); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) ;
+             border: 1px solid rgba(122,43,240,.35); box-shadow: 0 4px 24px rgba(122,43,240,.25), inset 0 0 32px rgba(43,240,255,.06);
+             color: var(--text); }
+    #hud { position:fixed; top:16px; left:16px; font:600 14px/1.2 ui-sans-serif, system-ui; text-shadow:0 0 8px #f0f; display:flex; gap:8px; }
+    .pill { padding:8px 12px; border-radius:16px; }
+
+    #actions { position:fixed; top:16px; right:16px; display:flex; gap:10px; }
+    button { padding:10px 14px; border-radius:12px; cursor:pointer; border:1px solid rgba(43,240,255,.35); color:var(--text);
+             background: radial-gradient(120% 120% at 0% 0%, rgba(43,240,255,.25), rgba(122,43,240,.15) 60%, rgba(255,255,255,.06) 100%);
+             box-shadow: 0 6px 24px rgba(43,240,255,.25), inset 0 0 24px rgba(122,43,240,.18); }
+    button:hover { transform: translateY(-1px); filter:saturate(1.1) brightness(1.1); }
+    button:active { transform: translateY(0); }
+
+    #brand { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); padding:10px 16px; border-radius:14px; letter-spacing:.5px;
+             color:#fff; border:1px solid rgba(255,224,102,.35); box-shadow:0 6px 24px rgba(255,224,102,.2); }
+    #overlay, #gameover { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:auto; }
+    .panel { min-width:320px; max-width:90vw; padding:22px; border-radius:18px; text-align:center; }
+    .title { font:800 20px/1.2 ui-sans-serif, system-ui; margin-bottom:10px; }
+    .muted { opacity:.8; margin-bottom:16px; }
+  </style>
+  <meta name="theme-color" content="#07060c" />
+  <meta name="description" content="Synthwave endless shooter on Base (testnet)." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🟦</text></svg>">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src *; img-src 'self' data:;" />
+  <script type="module" src="/src/main.ts"></script>
+  <meta name="robots" content="noindex" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BaseBlaster" />
+  <meta name="mobile-web-app-capable" content="yes" />
+</head>
+<body>
+  <noscript>This app needs JavaScript.</noscript>
+  <div id="hud">
+    <span class="pill glass">Score: <span id="score">0</span></span>
+    <span class="pill glass">Lives: <span id="lives">3</span></span>
+  </div>
+  <div id="actions">
+    <button class="glass" id="connect">Connect</button>
+    <button class="glass" id="mint">Mint Pass</button>
+    <button class="glass" id="submit">Submit Score</button>
+  </div>
+  <div id="brand" class="glass">BASEBLASTER • synthwave on Base</div>
+
+  <div id="overlay">
+    <div class="panel glass">
+      <div class="title">BaseBlaster</div>
+      <div class="muted">A synthwave endless shooter on Base Sepolia</div>
+      <button class="glass" id="start">Start Run</button>
+    </div>
+  </div>
+
+  <div id="gameover" style="display:none">
+    <div class="panel glass">
+      <div class="title">Run Over</div>
+      <div class="muted">Score: <span id="finalScore">0</span></div>
+      <button class="glass" id="restart">Restart</button>
+    </div>
+  </div>
+</body>
+</html>

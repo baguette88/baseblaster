@@ -1,0 +1,44 @@
+# env
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+
+# builds
+dist/
+build/
+.next/
+.out/
+.cache/
+.tmp/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.log
+
+# vercel
+.vercel/
+
+# hardhat / foundry
+artifacts/
+cache/
+out/
+broadcast/
+
+# coverage
+coverage/
+
+# editors & os
+.vscode/
+.idea/
+.DS_Store
+
+# package managers
+.pnpm-store/
+
+# misc
+*.local

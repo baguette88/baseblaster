@@ -38,6 +38,18 @@ $('connect').onclick = connectFlow
 $('mint').onclick = mintPass
 $('submit').onclick = submitScore
 
+function openFarcaster(text: string) {
+  const url = 'https://warpcast.com/~/compose?text=' + encodeURIComponent(text)
+  window.open(url, '_blank')
+}
+
+$('share').onclick = () => {
+  const s = game.getScore()
+  const text = `Playing BaseBlaster on Base — score ${s}. Try it: ${location.href}`
+  try { navigator.clipboard.writeText(`${location.href}`) } catch (_) {}
+  openFarcaster(text)
+}
+
 // overlays
 const startBtn = document.getElementById('start') as HTMLButtonElement
 const overlay = document.getElementById('overlay') as HTMLElement
